@@ -52,6 +52,7 @@ function App() {
   }
 
   const filter = () => {
+    if(/^([A-Z]{3})(,([A-Z]{3}))*$/.test(currencyCode)){
     setIsLoading(true)
     const userSelectedCurrencyCode = currencyCode.split(',')
     const filteredCurrencyConvertedList = {}
@@ -61,12 +62,14 @@ function App() {
      setIsFilter(true)
     setIsLoading(false)
   }
+
+  }
   return (
-    <div className="App">
+    <div className="App font-['Outfit']">
     {isLoading && <ReactLoader color="blue"/>}
       <div className='p-4'>
       <div className="max-w-xl mx-auto">
-        <div className="flex">
+        <div className="flex flex-row max-[425px]:flex-col ">
             <div className="relative w-full">
               <div>
                 <p onClick={Object.keys(conversionToAllCurrency).length > 0 ?()=>setShowCurrencyDropDown(!showCurrencyDropDown) : ()=>{}} className='absolute top-0 bg-blue-300 -left-1 border border-blue-300 h-full p-2.5 text-sm font-medium text-white  rounded-l-lg border '>{defaultSelectedCurrency}</p>
@@ -77,7 +80,7 @@ function App() {
                 </button>
             </div>
             {Object.keys(conversionToAllCurrency).length > 0 && 
-              <div className='flex flex-col mx-2'>
+              <div className='flex flex-col mx-2 max-[425px]:my-2 max-[425px]:items-center'>
                 <button onClick={()=>setShowCurrencyDropDown(!showCurrencyDropDown)} data-dropdown-toggle="dropdown" className="w-fit text-white bg-blue-300 hover:bg-blue-300 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-300 dark:focus:ring-blue-300" type="button">Currency
                   <svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
                     <path stroke="currentColor" stroke-linecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 4 4 4-4"/>
@@ -99,13 +102,13 @@ function App() {
         <p className='w-fit text-xs ml-3 text-gray-500'>use "," after every Currency Code in text box</p>
       </div>}
       </div>
-      <div className='flex flex-wrap'>
+      <div className='flex flex-wrap overflow-scroll h-[77vh]'>
         {Object.keys(conversionToAllCurrency).length >0 && Object.keys(isFilter ? filteredCurrencyConvertedList : conversionToAllCurrency).map(item=>{
           return (currencyToCountryCode[item] !== undefined && 
             <div className='m-3 cursor-pointer block max-w-xs p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700'>
               <img src={`https://flagcdn.com/h40/${currencyToCountryCode[item].code}.png`} className='m-auto' />
               <div className='flex row  justify-between items-center m-2'>
-                <h5 className="m-0 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{item}</h5>
+                <h5 className="m-0 text-2xl font-medium tracking-tight text-gray-900 dark:text-white font-['Outfit']">{item}</h5>
               </div>
                 <p className="mx-2 font-normal text-gray-700 dark:text-gray-400">{conversionToAllCurrency[item]}</p>
             </div>
@@ -132,7 +135,6 @@ function App() {
                 }} onMouseOver={()=> { currencyToCountryCode[item] && setShowTooleTip({index,content:currencyToCountryCode[item].fullName}) }}
                 onMouseLeave={()=>setShowTooleTip({index:null,content:''})}
                 className="m-0  w-fit cursor-pointer px-2 self-center py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">{item}
-                 {/* {console.log("currencyToCountryCode[item]",currencyToCountryCode[item])} */}
                  {currencyToCountryCode[item] != undefined && index === showTooleTip.index && <span className='shadow px-2 font-bold absolute bg-white -mx-2 -my-3 '>{showTooleTip.content}</span>}
                 </p>
                     )}
