@@ -4,7 +4,6 @@ import ReactLoader from 'react-single-loader'
 import 'react-single-loader/dist/index.css'
 
 function App() {
-
   const [currencyCode, setCurrencyCode] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [amount, setAmount] = useState('')
