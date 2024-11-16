@@ -1,1 +1,1 @@
-CI=true npm run build
+CI=true
