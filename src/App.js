@@ -13,6 +13,10 @@ function App() {
   const [defaultSelectedCurrency , setDefaultSelectedCurrency] = useState("USD")
   const [showCurrencyDropDown, setShowCurrencyDropDown] = useState(false)
   const [filteredCurrencyConvertedList, setFilteredCurrencyConvertedList] = useState({})
+  const [error,setError] = useState({
+    amount:null,
+    currencyCode: null
+  })
   const [isFilter, setIsFilter] = useState(false)
   const [showTooleTip, setShowTooleTip] = useState({
     index: null,
@@ -21,30 +25,35 @@ function App() {
 
   const convertCurrency =  async () => {
     try {
-    setIsLoading(true)
-    const response = await fetch(`https://v6.exchangerate-api.com/v6/${process.env.REACT_APP_EXCHANGE_RATE_API_KEY}/latest/${defaultSelectedCurrency}`)
-    const res = await response.json()
-    
-    const response_ = await fetch('https://restcountries.com/v3.1/all');
-    const countries = await response_.json();
-    let currencyToCountryCode = {}
+      if(/^[1-9][0-9]*$/.test(amount))
+      {
+        setError({amount:null,currencyCode:null})
+        setIsLoading(true)
+        const response = await fetch(`https://v6.exchangerate-api.com/v6/${process.env.REACT_APP_EXCHANGE_RATE_API_KEY}/latest/${defaultSelectedCurrency}`)
+        const res = await response.json()
+        
+        const response_ = await fetch('https://restcountries.com/v3.1/all');
+        const countries = await response_.json();
+        let currencyToCountryCode = {}
 
-    countries.forEach(country => {
-        const currencies = country.currencies;
-        if (currencies) {
-            for (const [code, currency] of Object.entries(currencies)) {
-                currencyToCountryCode[code] = { code: country.cca2.toLowerCase(), fullName: country.name.common }; // cca2 is the country code
+        countries.forEach(country => {
+            const currencies = country.currencies;
+            if (currencies) {
+                for (const [code, currency] of Object.entries(currencies)) {
+                    currencyToCountryCode[code] = { code: country.cca2.toLowerCase(), fullName: country.name.common }; // cca2 is the country code
+                }
             }
-        }
-    });
-    setCurrencyToCountryCode(currencyToCountryCode)
-    setFilteredCurrencyConvertedList(currencyToCountryCode)
-    const conversionToAllCurrency = {}
-    Object.keys(res?.conversion_rates).map((item)=> {
-      conversionToAllCurrency[item] = res?.conversion_rates[item]*amount
+        });
+        setCurrencyToCountryCode(currencyToCountryCode)
+        setFilteredCurrencyConvertedList(currencyToCountryCode)
+        const conversionToAllCurrency = {}
+        Object.keys(res?.conversion_rates).map((item)=> {
+          conversionToAllCurrency[item] = res?.conversion_rates[item]*amount
     })
-
     setConversionToAllCurrency(conversionToAllCurrency)
+  }else{
+    setError({amount:'Please enter valid amount',currencyCode:null})
+  }
     } catch (error) {
       console.log(error)
     }
@@ -53,16 +62,18 @@ function App() {
 
   const filter = () => {
     if(/^([A-Z]{3})(,([A-Z]{3}))*$/.test(currencyCode)){
-    setIsLoading(true)
-    const userSelectedCurrencyCode = currencyCode.split(',')
-    const filteredCurrencyConvertedList = {}
-    userSelectedCurrencyCode.map((item) => 
-     { filteredCurrencyConvertedList[item.toUpperCase()] = conversionToAllCurrency[item.toUpperCase()] })
-     setFilteredCurrencyConvertedList(filteredCurrencyConvertedList)
-     setIsFilter(true)
-    setIsLoading(false)
+      setError({amount:null,currencyCode:null})
+      setIsLoading(true)
+      const userSelectedCurrencyCode = currencyCode.split(',')
+      const filteredCurrencyConvertedList = {}
+      userSelectedCurrencyCode.map((item) => 
+      { filteredCurrencyConvertedList[item.toUpperCase()] = conversionToAllCurrency[item.toUpperCase()] })
+      setFilteredCurrencyConvertedList(filteredCurrencyConvertedList)
+      setIsFilter(true)
+      setIsLoading(false)
+  }else{
+    setError({amount:null,currencyCode:'Please enter valid currency code'})
   }
-
   }
   return (
     <div className="App font-['Outfit']">
@@ -88,24 +99,26 @@ function App() {
                 </button>
               </div>}
         </div>
+        {error.amount != null && <p className='text-red-500 text-left'>{error.amount}</p>}
         
       </div>
       {Object.keys(conversionToAllCurrency).length >0 &&<div className="max-w-md mx-auto my-3">
         <div className="flex">
             <div className="relative w-full">
-                <input onChange={(e)=>setCurrencyCode(e.target.value)} type="search" className="block p-2.5 w-full z-20 text-sm text-gray-900 rounded-lg  border border-gray-300 focus:outline-none focus:border-blue-300 dark:bg-gray-700 dark:border-s-gray-700  dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-300" placeholder="Enter Currency Code(s)" required />
+                <input value={currencyCode} onChange={(e)=>setCurrencyCode(e.target.value)} type="search" className="block p-2.5 w-full z-20 text-sm text-gray-900 rounded-lg  border border-gray-300 focus:outline-none focus:border-blue-300 dark:bg-gray-700 dark:border-s-gray-700  dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-300" placeholder="Enter Currency Code(s)" required />
                 <button onClick={filter} type="submit" className="absolute top-0 end-0 h-full p-2.5 text-sm font-medium text-white bg-blue-300 rounded-e-lg border border-blue-300 hover:bg-blue-300 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-300 dark:focus:ring-blue-300">
                   <p>Filter</p>
                 </button>
             </div>
         </div>
         <p className='w-fit text-xs ml-3 text-gray-500'>use "," after every Currency Code in text box</p>
+        {error.currencyCode != null && <p className='text-red-500 text-left'>{error.currencyCode}</p>}
       </div>}
       </div>
       <div className='flex flex-wrap overflow-scroll h-[77vh]'>
         {Object.keys(conversionToAllCurrency).length >0 && Object.keys(isFilter ? filteredCurrencyConvertedList : conversionToAllCurrency).map(item=>{
           return (currencyToCountryCode[item] !== undefined && 
-            <div className='m-3 cursor-pointer block max-w-xs p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700'>
+            <div className='h-fit m-3 cursor-pointer block max-w-xs p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700'>
               <img src={`https://flagcdn.com/h40/${currencyToCountryCode[item].code}.png`} className='m-auto' />
               <div className='flex row  justify-between items-center m-2'>
                 <h5 className="m-0 text-2xl font-medium tracking-tight text-gray-900 dark:text-white font-['Outfit']">{item}</h5>
@@ -132,6 +145,7 @@ function App() {
                 <p onClick={()=>{
                   setShowCurrencyDropDown(!showCurrencyDropDown)
                   setDefaultSelectedCurrency(item)
+                  setCurrencyCode('')
                 }} onMouseOver={()=> { currencyToCountryCode[item] && setShowTooleTip({index,content:currencyToCountryCode[item].fullName}) }}
                 onMouseLeave={()=>setShowTooleTip({index:null,content:''})}
                 className="m-0  w-fit cursor-pointer px-2 self-center py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">{item}
